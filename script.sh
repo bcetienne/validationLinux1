@@ -10,11 +10,30 @@ orange=`tput setaf 33`;
 noColor=`tput sgr0`;
 
 # TODO : Faire le menu principal
+function mainMenu {
+
+}
 
 # TODO : Installer Vagrant et/ou VirtualBox
+function installVagrant {
+
+}
+
+function installVirtualBox {
+
+}
 
 # TODO : Création d'une Vagrant comprenant le fichier VagrantFile
+function createVagrant {
+
+}
 
 # TODO : Afficher les Vagrant en fonctionnement sur le système et interragir avec
+function showVagrant {
+
+}
 
 # TODO : Placer les erreurs dans un fichier error.log
+function sendErrors {
+
+}

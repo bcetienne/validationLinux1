@@ -221,10 +221,11 @@ function createVagrant {
     fi
 
     echo "${magenta}Voulez-vous installer MySQL ? (y/n)${noColor}";
-    read choiceMySQL;
-    while [ "$choicePackage" != "y" ] && [ "$choicePackage" != "n" ]; do
+    read -rsn1 choiceMySQL;
+
+    while [ "$choiceMySQL" != "y" ] && [ "$choiceMySQL" != "n" ]; do
       echo "Veuillez resaisir une réponse correcte. (y/n)"
-      read -rsn1 choicePackage;
+      read -rsn1 choiceMySQL;
     done
 
     if [ "$choiceMySQL" == "y" ]
@@ -241,10 +242,11 @@ function createVagrant {
     fi
 
     echo "${magenta}Voulez-vous installer Apache2 ? (y/n)${noColor}";
-    read choiceApache2;
-    while [ "$choicePackage" != "y" ] && [ "$choicePackage" != "n" ]; do
+    read -rsn1 choiceApache2;
+
+    while [ "$choiceApache2" != "y" ] && [ "$choiceApache2" != "n" ]; do
       echo "Veuillez resaisir une réponse correcte. (y/n)"
-      read -rsn1 choicePackage;
+      read -rsn1 choiceApache2;
     done
 
     if [ "$choiceApache2" == "y" ]
@@ -259,10 +261,11 @@ function createVagrant {
     fi
 
     echo "${magenta}Voulez-vous installer NodeJS ? (y/n)${noColor}";
-    read choiceNode;
-    while [ "$choicePackage" != "y" ] && [ "$choicePackage" != "n" ]; do
+    read -rsn1 choiceNode;
+
+    while [ "$choiceNode" != "y" ] && [ "$choiceNode" != "n" ]; do
       echo "Veuillez resaisir une réponse correcte. (y/n)"
-      read -rsn1 choicePackage;
+      read -rsn1 choiceNode;
     done
 
     if [ "$choiceNode" == "y" ]
@@ -276,10 +279,11 @@ function createVagrant {
       vagrant ssh -c "sudo apt upgrade -y";
 
       echo "${magenta}Voulez-vous installer MongoDB ? (y/n)${noColor}";
-      read choiceMongo;
-      while [ "$choicePackage" != "y" ] && [ "$choicePackage" != "n" ]; do
+      read -rsn1 choiceMongo;
+
+      while [ "$choiceMongo" != "y" ] && [ "$choiceMongo" != "n" ]; do
       echo "Veuillez resaisir une réponse correcte. (y/n)"
-      read -rsn1 choicePackage;
+      read -rsn1 choiceMongo;
     done
 
       if [ "$choiceMongo" == "y" ]
@@ -292,10 +296,11 @@ function createVagrant {
       fi
       
       echo "${magenta}Voulez-vous installer ExpressJS ? (y/n)${noColor}";
-      read choiceExpress;
-      while [ "$choicePackage" != "y" ] && [ "$choicePackage" != "n" ]; do
+      read -rsn1 choiceExpress;
+
+      while [ "$choiceExpress" != "y" ] && [ "$choiceExpress" != "n" ]; do
       echo "Veuillez resaisir une réponse correcte. (y/n)"
-      read -rsn1 choicePackage;
+      read -rsn1 choiceExpress;
     done
 
       if [ "$choiceExpress" == "y" ]
@@ -328,16 +333,16 @@ function destroyVagrant {
   read vagrantId;
   
   echo "${magenta}Etes-vous sûr ? Cette action est irreversible (y/n)${noColor}";
-  read choiceDestroy;
+  read -rsn1 choiceDestroy;
+
+  while [ "$choiceDestroy" != "y" ] && [ "$choiceDestroy" != "n" ]; do
+    echo "Veuillez resaisir une réponse correcte. (y/n)"
+    read -rsn1 choiceDestroy;
+  done
 
   if [ "$choiceDestroy" == "n" ]
   then
     vagrantMenu;
-  while [ "$choicePackage" != "y" ] && [ "$choicePackage" != "n" ]; do
-      echoVeuillez resaisir une réponse correcte. (y/n)"
-      read -rsn1 choicePackage;
-    done
-
   elif [ "$choiceDestroy" == "y" ]
   then
     vagrant destroy $vagrantId;

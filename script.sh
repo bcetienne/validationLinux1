@@ -9,20 +9,6 @@ magenta=`tput setaf 5`;
 orange=`tput setaf 33`;
 noColor=`tput sgr0`;
 
-
-function test {
-  findPackage=$(dpkg-query -W --showformat='${Status}\n' virtualbox|grep "install ok installed");
-
-  if [ "" == "$findPackage" ]
-  then
-    echo "rien trouvé";
-
-  else 
-    echo "existe";
-  fi
-}
-
-# TODO : Faire le menu principal
 function mainMenu {
   # Options lists
   options=("Installer Vagrant" "Installer VirtualBox" "Menu Vagrant" "Quitter");
@@ -37,12 +23,6 @@ function mainMenu {
       "Quitter" ) choiceAction="quit";break;;
     esac
   done
-
-  #if [ $choiceAction != "installVagrant" | $choiceAction != "installVB" | $choiceAction != "vagrantMenu" | $choiceAction != "quit" ]
-  #then
-  #  echo "Veuillez choisir une option dans le menu";
-  #  mainMenu;
-  #done
 
   if  [ "$choiceAction" == "installVagrant" ]
   then
@@ -73,7 +53,12 @@ function installVagrant {
     vagrant version;
   else 
     echo "${magenta}Vagrant est déjà installé, voulez-vous le désinstaller pour le réinstaller ? (y/n)${noColor}";
-    read choicePackage;
+    read -rsn1 choicePackage;
+
+    while [ "$choicePackage" != "y" ] && [ "$choicePackage" != "n" ]; do
+      echo "Voulez-vous désinstaller Vagrant pour le réinstaller ? (y/n)"
+      read -rsn1 choicePackage;
+    done
 
     if [ "$choicePackage" == "y" ]
     then
@@ -105,6 +90,11 @@ function installVirtualBox {
   else 
     echo "${magenta}VirtualBox est déjà installé, voulez-vous le désinstaller pour le réinstaller ? (y/n)${noColor}";
     read choicePackage;
+
+    while [ "$choicePackage" != "y" ] && [ "$choicePackage" != "n" ]; do
+      echo "Voulez-vous désinstaller VirtualBox pour le réinstaller ? (y/n)"
+      read -rsn1 choicePackage;
+    done
 
     if [ "$choicePackage" == "y" ]
     then
@@ -193,7 +183,13 @@ function createVagrant {
     vagrant ssh -c "sudo apt update";
 
     echo "${magenta}Voulez-vous installer PHP ? (y/n)${noColor}";
-    read choicePHP;
+    read -rsn1 choicePHP;
+
+    while [ "$choicePHP" != "y" ] && [ "$choicePHP" != "n" ]; do
+      echo "Veuillez resaisir une réponse correcte. (y/n)"
+      read -rsn1 choicePHP;
+    done
+
     if [ "$choicePHP" == "y" ]
     then
       vagrant ssh -c "sudo add-apt-repository ppa:ondrej/php";
@@ -201,7 +197,13 @@ function createVagrant {
       vagrant ssh -c "sudo apt install -y unzip curl php7.2 php7.2-cli php7.2-mbstring php7.2-mysql libapache2-mod-php7.2 php7.2-xml php-mcrypt php7.2-intl php-curl php-zip php-gd";
 
       echo "${magenta}Voulez-vous installer Composer ? (y/n)${noColor}";
-      read choiceComposer;
+      read -rsn1 choiceComposer;
+
+    while [ "$choiceComposer" != "y" ] && [ "$choiceComposer" != "n" ]; do
+      echo "Veuillez resaisir une réponse correcte. (y/n)"
+      read -rsn1 choiceComposer;
+    done
+
       if [ "$choiceComposer" == "y" ]
       then
         vagrant ssh -c "php -r \"copy('https://getcomposer.org/installer', 'composer-setup.php');\"";
@@ -220,6 +222,11 @@ function createVagrant {
 
     echo "${magenta}Voulez-vous installer MySQL ? (y/n)${noColor}";
     read choiceMySQL;
+    while [ "$choicePackage" != "y" ] && [ "$choicePackage" != "n" ]; do
+      echo "Veuillez resaisir une réponse correcte. (y/n)"
+      read -rsn1 choicePackage;
+    done
+
     if [ "$choiceMySQL" == "y" ]
     then
       vagrant ssh -c "export DEBIAN_FRONTEND=\"noninteractive\"";
@@ -235,6 +242,11 @@ function createVagrant {
 
     echo "${magenta}Voulez-vous installer Apache2 ? (y/n)${noColor}";
     read choiceApache2;
+    while [ "$choicePackage" != "y" ] && [ "$choicePackage" != "n" ]; do
+      echo "Veuillez resaisir une réponse correcte. (y/n)"
+      read -rsn1 choicePackage;
+    done
+
     if [ "$choiceApache2" == "y" ]
     then
       vagrant ssh -c "sudo apt install -y apache2";
@@ -248,6 +260,11 @@ function createVagrant {
 
     echo "${magenta}Voulez-vous installer NodeJS ? (y/n)${noColor}";
     read choiceNode;
+    while [ "$choicePackage" != "y" ] && [ "$choicePackage" != "n" ]; do
+      echo "Veuillez resaisir une réponse correcte. (y/n)"
+      read -rsn1 choicePackage;
+    done
+
     if [ "$choiceNode" == "y" ]
     then
       echo "${magenta}Installation de NodeJS${noColor}";
@@ -260,6 +277,11 @@ function createVagrant {
 
       echo "${magenta}Voulez-vous installer MongoDB ? (y/n)${noColor}";
       read choiceMongo;
+      while [ "$choicePackage" != "y" ] && [ "$choicePackage" != "n" ]; do
+      echo "Veuillez resaisir une réponse correcte. (y/n)"
+      read -rsn1 choicePackage;
+    done
+
       if [ "$choiceMongo" == "y" ]
       then
         echo "${magenta}Installation de MongoDB${noColor}";
@@ -271,6 +293,11 @@ function createVagrant {
       
       echo "${magenta}Voulez-vous installer ExpressJS ? (y/n)${noColor}";
       read choiceExpress;
+      while [ "$choicePackage" != "y" ] && [ "$choicePackage" != "n" ]; do
+      echo "Veuillez resaisir une réponse correcte. (y/n)"
+      read -rsn1 choicePackage;
+    done
+
       if [ "$choiceExpress" == "y" ]
       then
         echo "${magenta}Installation de ExpressJS${noColor}";
@@ -306,6 +333,11 @@ function destroyVagrant {
   if [ "$choiceDestroy" == "n" ]
   then
     vagrantMenu;
+  while [ "$choicePackage" != "y" ] && [ "$choicePackage" != "n" ]; do
+      echoVeuillez resaisir une réponse correcte. (y/n)"
+      read -rsn1 choicePackage;
+    done
+
   elif [ "$choiceDestroy" == "y" ]
   then
     vagrant destroy $vagrantId;

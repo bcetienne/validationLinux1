@@ -108,27 +108,30 @@ function vagrantMenu {
 
 # TODO : Création d'une Vagrant comprenant le fichier VagrantFile
 function createVagrant {
-  optionsOS=("ubuntu/xenial64" "Retour");
+  optionsOS=("ubuntu/xenial64" "ubuntu/trusty64" "hashicorp/precise64" "Retour");
   echo "${magenta}Choisissez un des OS ci-dessous :${noColor}";
   select responseOSMenu in "${optionsOS[@]}"
   do
     case $responseOSMenu in
       "ubuntu/xenial64" ) choiceOS="ubuntu/xenial64";break;;
+      "ubuntu/trusty64" ) choiceOS="ubuntu/trusty64";break;;
+      "hashicorp/precise64" ) choiceOS="hashicorp/precise64";break;;
       "Retour" ) choiceOS="return";break;; 
     esac
   done
 
   if [ "$choiceOS" == "ubuntu/xenial64" ]
   then
-    os=$choiceAction;
+    os=$choiceOS;
     syncFile="";
     ipAddress="";
 
-    echo "${magenta}Quelle est l'adresse ip que vous voulez assigner à la machine Vagrant ?${noColor}";
-    read ipAddress;
-
     echo "${magenta}Quel est le dossier de synchronisation que vous voulez créer ?${noColor}";
     read syncFile;
+    mkdir $syncFile;
+
+    echo "${magenta}Quelle est l'adresse ip que vous voulez assigner à la machine Vagrant ?${noColor}";
+    read ipAddress;
 
     vagrant init $os;
 
@@ -144,9 +147,67 @@ function createVagrant {
     echo "${magenta}Installation de la machine, ceci peut prendre plus ou moins de temps en fonction de votre connexion à internet...${noColor}";
 
     vagrant up;
-  
-    echo "${magenta}Installation de PHP, Composer, MySQL et Apache...${noColor}";
-    vagrant ssh -c "sudo add-apt-repository ppa:ondrej/php && sudo apt update && export DEBIAN_FRONTEND=\"noninteractive\" && sudo debconf-set-selections <<< \"mysql-server mysql-server/root_password password root\" && sudo debconf-set-selections <<< \"mysql-server mysql-server/root_password_again password root\" && sudo apt install -y mysql-server && sudo apt install -y apache2 unzip curl php7.2 php7.2-cli php7.2-mbstring php7.2-mysql libapache2-mod-php7.2 php7.2-xml php-mcrypt php7.2-intl php-curl php-zip php-gd && cd && php -r \"copy('https://getcomposer.org/installer', 'composer-setup.php');\" && php -r \"if (hash_file('SHA384', 'composer-setup.php') === '544e09ee996cdf60ece3804abc52599c22b1f40f4323403c44d44fdfdd586475ca9813a858088ffbc1f233e9b180f061') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;\" && sudo php composer-setup.php --install-dir=/usr/local/bin --filename=composer\" && php -r \"unlink('composer-setup.php');\" && sudo a2enmod rewrite && sudo apt update && sudo apt upgrade -y";
+    vagrant ssh -c "sudo apt update";
+
+    echo "${magenta}Voulez-vous installer PHP ? (y/n)${noColor}";
+    read choicePHP;
+    if [ "$choicePHP" == "y" ]
+    then
+      vagrant ssh -c "sudo add-apt-repository ppa:ondrej/php";
+      vagrant ssh -c "sudo apt install -y unzip curl php7.2 php7.2-cli php7.2-mbstring php7.2-mysql libapache2-mod-php7.2 php7.2-xml php-mcrypt php7.2-intl php-curl php-zip php-gd";
+
+      echo "${magenta}Voulez-vous installer Composer ? (y/n)${noColor}";
+      read choiceComposer;
+      if [ "$choiceComposer" == "y" ]
+      then
+        vagrant ssh -c "php -r \"copy('https://getcomposer.org/installer', 'composer-setup.php');\"";
+        vagrant ssh -c "php -r \"if (hash_file('SHA384', 'composer-setup.php') === '544e09ee996cdf60ece3804abc52599c22b1f40f4323403c44d44fdfdd586475ca9813a858088ffbc1f233e9b180f061') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;\"";
+        vagrant ssh -c "sudo php composer-setup.php --install-dir=/usr/local/bin --filename=composer\"";
+        vagrant ssh -c "php -r \"unlink('composer-setup.php');\"";
+        echo "${magenta}Composer a été installé avec succès.${noColor}";
+      fi
+
+      if [ "$choiceComposer" == "n" ]
+      then
+        echo "${magenta}Eviter Composer${noColor}";
+      fi
+    fi
+
+    if [ "$choicePHP" == "n" ]
+    then
+      echo "${magenta}Eviter PHP${noColor}";
+    fi
+
+    echo "${magenta}Voulez-vous installer MySQL ? (y/n)${noColor}";
+    read choiceMySQL;
+    if [ "$choiceMySQL" == "y" ]
+    then
+      vagrant ssh -c "export DEBIAN_FRONTEND=\"noninteractive\"";
+      # Sets MySQL password to root without asking the user for it
+      vagrant ssh -c "sudo debconf-set-selections <<< \"mysql-server mysql-server/root_password password root\"";
+      vagrant ssh -c "sudo debconf-set-selections <<< \"mysql-server mysql-server/root_password_again password root\"";
+      vagrant ssh -c "sudo apt install -y mysql-server";
+      echo "${magenta}MySQL a été installé avec succès, l'utilisateur a été défini sur <<root>> et le mot de passe est <<root>>";
+    fi
+
+    if [ "$choiceMySQL" == "n" ]
+    then
+      echo "${magenta}Eviter MySQL${noColor}";
+    fi
+
+    echo "${magenta}Voulez-vous installer Apache2 ? (y/n)${noColor}";
+    read choiceApache2;
+    if [ "$choiceApache2" == "y" ]
+    then
+      vagrant ssh -c "sudo apt install -y apache2";
+      echo "${magenta}Apache2 a bien été installé${noColor}";
+    fi
+
+    if [ "$choiceApache2" == "n" ]
+    then
+      echo "${magenta}Eviter Apache2${noColor}";
+    fi
+    vagrant ssh -c "sudo apt upgrade -y";
   fi
 
   if [ "$choiceOS" == "return" ]

@@ -9,6 +9,19 @@ magenta=`tput setaf 5`;
 orange=`tput setaf 33`;
 noColor=`tput sgr0`;
 
+
+function test {
+  findPackage=$(dpkg-query -W --showformat='${Status}\n' virtualbox|grep "install ok installed");
+
+  if [ "" == "$findPackage" ]
+  then
+    echo "rien trouvé";
+
+  else 
+    echo "existe";
+  fi
+}
+
 # TODO : Faire le menu principal
 function mainMenu {
   # Options lists
@@ -34,42 +47,79 @@ function mainMenu {
   if  [ "$choiceAction" == "installVagrant" ]
   then
     installVagrant;
-  fi
-
-  if  [ "$choiceAction" == "installVB" ]
+  elif  [ "$choiceAction" == "installVB" ]
   then
     installVB;
-  fi
-
-  if  [ "$choiceAction" == "vagrantMenu" ]
+  elif  [ "$choiceAction" == "vagrantMenu" ]
   then
     vagrantMenu;
-  fi
-
-  if  [ "$choiceAction" == "quit" ]
+  elif  [ "$choiceAction" == "quit" ]
   then
     echo "${green}A bientôt${noColor}";
     exit;
   fi
 }
 
-# TODO : Installer Vagrant et/ou VirtualBox
 function installVagrant {
-  echo "${magenta}Désinstallation de l'ancienne version de Vagrant...${noColor}";
-  sudo apt-get remove --auto-remove vagrant;
-  rm -r ~/.vagrant.d;
+  echo "Recherche de Vagrant dans le système...";
+  findPackage=$(dpkg-query -W --showformat='${Status}\n' vagrant|grep "install ok installed");
 
-  echo "${magenta}Installation de la nouvelle version de Vagrant...${noColor}";
-  wget https://releases.hashicorp.com/vagrant/2.1.1/vagrant_2.1.1_x86_64.deb;
-  sudo dpkg -i vagrant_2.1.1_x86_64.deb;
-  echo "${magenta}Version de Vagrant :${noColor}";
-  vagrant version;
+  if [ "" == "$findPackage" ]
+  then
+    echo "${magenta}Installation de Vagrant...${noColor}";
+    wget https://releases.hashicorp.com/vagrant/2.1.1/vagrant_2.1.1_x86_64.deb;
+    sudo dpkg -i vagrant_2.1.1_x86_64.deb;
+    echo "${magenta}Version de Vagrant :${noColor}";
+    vagrant version;
+  else 
+    echo "${magenta}Vagrant est déjà installé, voulez-vous le désinstaller pour le réinstaller ? (y/n)${noColor}";
+    read choicePackage;
+
+    if [ "$choicePackage" == "y" ]
+    then
+      echo "${magenta}Désinstallation de Vagrant...${noColor}";
+      sudo apt-get remove --auto-remove vagrant;
+      rm -r ~/.vagrant.d;
+
+      echo "${magenta}Installation de Vagrant...${noColor}";
+      wget https://releases.hashicorp.com/vagrant/2.1.1/vagrant_2.1.1_x86_64.deb;
+      sudo dpkg -i vagrant_2.1.1_x86_64.deb;
+      echo "${magenta}Version de Vagrant :${noColor}";
+      vagrant version;
+    elif [ "$choicePackage" == "n" ]
+    then
+      mainMenu;
+    fi
+  fi
 }
 
 function installVirtualBox {
-  echo "${magenta}Installation de VirtualBox...${noColor}";
-  sudo apt-install virtualbox -y || echo "${red}Error : Damn, something went wrong bro...${noColor}" && mainMenu;
-  sudo apt-install virtualbox-qt -y || echo "${red}Error : Damn, something went wrong for the second time bro ! Check your internet connection plz${noColor}" && mainMenu;
+  echo "Recherche de VirtualBox dans le système...";
+  findPackage=$(dpkg-query -W --showformat='${Status}\n' virtualbox|grep "install ok installed");
+
+  if [ "" == "$findPackage" ]
+  then
+    echo "${magenta}Installation de VirtualBox...${noColor}";
+    sudo apt-install virtualbox -y || echo "${red}Error : Damn, something went wrong bro...${noColor}" && mainMenu;
+    sudo apt-install virtualbox-qt -y || echo "${red}Error : Damn, something went wrong for the second time bro ! Check your internet connection plz${noColor}" && mainMenu;
+  else 
+    echo "${magenta}VirtualBox est déjà installé, voulez-vous le désinstaller pour le réinstaller ? (y/n)${noColor}";
+    read choicePackage;
+
+    if [ "$choicePackage" == "y" ]
+    then
+      echo "${magenta}Désinstallation de VirtualBox...${noColor}";
+      sudo apt-get remove --purge virtualbox;
+      sudo rm ~/"VirtualBox VMs" -Rf;
+      sudo rm ~/.config/VirtualBox/ -Rf;
+      echo "${magenta}Installation de VirtualBox...${noColor}";
+      sudo apt-install virtualbox -y || echo "${red}Error : Damn, something went wrong bro...${noColor}" && mainMenu;
+    sudo apt-install virtualbox-qt -y || echo "${red}Error : Damn, something went wrong for the second time bro ! Check your internet connection plz${noColor}" && mainMenu;
+    elif [ "$choicePackage" == "n" ]
+    then
+      mainMenu;
+    fi
+  fi
 }
 
 function vagrantMenu {
@@ -88,25 +138,18 @@ function vagrantMenu {
     if [ "$choiceVagrant" == "createVagrant" ]
     then
       createVagrant;
-    fi
-
-    if [ "$choiceVagrant" == "listVagrant" ]
+    elif [ "$choiceVagrant" == "listVagrant" ]
     then
       showVagrant;
-    fi;
-
-    if [ "$choiceVagrant" == "destroyVagrant" ]
+    elif [ "$choiceVagrant" == "destroyVagrant" ]
     then
       destroyVagrant;
-    fi
-
-    if [ "$choiceVagrant" == "return" ]
+    elif [ "$choiceVagrant" == "return" ]
     then
       mainMenu;
     fi
 }
 
-# TODO : Création d'une Vagrant comprenant le fichier VagrantFile
 function createVagrant {
   optionsOS=("ubuntu/xenial64" "ubuntu/trusty64" "hashicorp/precise64" "Retour");
   echo "${magenta}Choisissez un des OS ci-dessous :${noColor}";
@@ -154,6 +197,7 @@ function createVagrant {
     if [ "$choicePHP" == "y" ]
     then
       vagrant ssh -c "sudo add-apt-repository ppa:ondrej/php";
+      vagrant ssh -c "sudo apt update";
       vagrant ssh -c "sudo apt install -y unzip curl php7.2 php7.2-cli php7.2-mbstring php7.2-mysql libapache2-mod-php7.2 php7.2-xml php-mcrypt php7.2-intl php-curl php-zip php-gd";
 
       echo "${magenta}Voulez-vous installer Composer ? (y/n)${noColor}";
@@ -165,17 +209,13 @@ function createVagrant {
         vagrant ssh -c "sudo php composer-setup.php --install-dir=/usr/local/bin --filename=composer\"";
         vagrant ssh -c "php -r \"unlink('composer-setup.php');\"";
         echo "${magenta}Composer a été installé avec succès.${noColor}";
-      fi
-
-      if [ "$choiceComposer" == "n" ]
+      elif [ "$choiceComposer" == "n" ]
       then
-        echo "${magenta}Eviter Composer${noColor}";
+        echo "${green}Eviter Composer${noColor}";
       fi
-    fi
-
-    if [ "$choicePHP" == "n" ]
+    elif [ "$choicePHP" == "n" ]
     then
-      echo "${magenta}Eviter PHP${noColor}";
+      echo "${green}Eviter PHP${noColor}";
     fi
 
     echo "${magenta}Voulez-vous installer MySQL ? (y/n)${noColor}";
@@ -188,11 +228,9 @@ function createVagrant {
       vagrant ssh -c "sudo debconf-set-selections <<< \"mysql-server mysql-server/root_password_again password root\"";
       vagrant ssh -c "sudo apt install -y mysql-server";
       echo "${magenta}MySQL a été installé avec succès, l'utilisateur a été défini sur <<root>> et le mot de passe est <<root>>";
-    fi
-
-    if [ "$choiceMySQL" == "n" ]
+    elif [ "$choiceMySQL" == "n" ]
     then
-      echo "${magenta}Eviter MySQL${noColor}";
+      echo "${green}Eviter MySQL${noColor}";
     fi
 
     echo "${magenta}Voulez-vous installer Apache2 ? (y/n)${noColor}";
@@ -200,14 +238,53 @@ function createVagrant {
     if [ "$choiceApache2" == "y" ]
     then
       vagrant ssh -c "sudo apt install -y apache2";
+      vagrant ssh -c "sudo a2enmod rewrite";
+      vagrant ssh -c "sudo apache2 reload";
       echo "${magenta}Apache2 a bien été installé${noColor}";
+    elif [ "$choiceApache2" == "n" ]
+    then
+      echo "${green}Eviter Apache2${noColor}";
     fi
 
-    if [ "$choiceApache2" == "n" ]
+    echo "${magenta}Voulez-vous installer NodeJS ? (y/n)${noColor}";
+    read choiceNode;
+    if [ "$choiceNode" == "y" ]
     then
-      echo "${magenta}Eviter Apache2${noColor}";
+      echo "${magenta}Installation de NodeJS${noColor}";
+      vagrant ssh -c "curl -sL https://deb.nodesource.com/setup_8.x -o nodesource_setup.sh";
+      vagrant ssh -c "sudo bash nodesource_setup.sh";
+      vagrant ssh -c "sudo apt-get -y install nodejs";
+      vagrant ssh -c "sudo apt-get -y install build-essential";
+      vagrant ssh -c "sudo apt update";
+      vagrant ssh -c "sudo apt upgrade -y";
+
+      echo "${magenta}Voulez-vous installer MongoDB ? (y/n)${noColor}";
+      read choiceMongo;
+      if [ "$choiceMongo" == "y" ]
+      then
+        echo "${magenta}Installation de MongoDB${noColor}";
+        vagrant ssh -c "npm install mongodb --save";
+      elif [ "$choiceMongo" == "n"]
+      then
+        echo "${green}Eviter MongoDB${noColor}";
+      fi
+      
+      echo "${magenta}Voulez-vous installer ExpressJS ? (y/n)${noColor}";
+      read choiceExpress;
+      if [ "$choiceExpress" == "y" ]
+      then
+        echo "${magenta}Installation de ExpressJS${noColor}";
+        vagrant ssh -c "npm install express";
+      elif [ "$choiceExpress" == "n" ]
+      then
+        echo "${green}Eviter ExpressJS${noColor}";
+      fi
+    elif [ "$choiceNode" == "n" ]
+    then
+      echo "${green}Eviter NodeJS${noColor}";
     fi
     vagrant ssh -c "sudo apt upgrade -y";
+    vagrantMenu;
   fi
 
   if [ "$choiceOS" == "return" ]
@@ -229,16 +306,13 @@ function destroyVagrant {
   if [ "$choiceDestroy" == "n" ]
   then
     vagrantMenu;
-  fi
-
-  if [ "$choiceDestroy" == "y" ]
+  elif [ "$choiceDestroy" == "y" ]
   then
     vagrant destroy $vagrantId;
     vagrantMenu;
   fi
 }
 
-# TODO : Afficher les Vagrant en fonctionnement sur le système et interragir avec
 function showVagrant {
   echo "${magenta}Affichage de toutes les machines Vagrant...${noColor}";
   vagrant global-status;
@@ -248,5 +322,4 @@ function showVagrant {
 function sendErrors {
   echo "zeub";
 }
-
 mainMenu;
